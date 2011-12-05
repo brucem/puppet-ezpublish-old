@@ -1,3 +1,4 @@
+# Create an environment for an eZPublish instalation 
 class ezpublish {
 
     require augeas
@@ -6,6 +7,8 @@ class ezpublish {
     require php::apache
     require mysql::client
     require mysql::server
+
+    $dist_dir = '/var/ezpublish-dist'
 
     # Install php modules
     $php_package_list = ["php5-mysql", "php5-gd", "php5-mcrypt", "php5-imagick", "php-apc", "php-pear", "php-xml-parser", "php-mail", "php-log", "php-auth", "php5-curl"]
