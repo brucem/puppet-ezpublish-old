@@ -1,6 +1,6 @@
 define ezpublish::vhost(
     $domain          = 'demo.ez.no',
-    $timezone        = 'GMT',
+    $timezone        = 'GMT',         # http://php.net/manual/en/timezones.php
     $db_name         = 'ez_demo',
     $db_user         = 'ez_demo',
     $db_pass         = 'password',
@@ -12,10 +12,12 @@ define ezpublish::vhost(
     $ez_admin_pass   = 'publish',
     $ez_admin_email  = 'nospam@ez.no',
     $ez_package      = 'ezflow_site', # plain_site|ezwebin_site|ezwebin_site_clean|ezflow_site|ezflow_site_clean
-    $version         = 'latest',
-    $ensure          = 'present'
+    $version         = 'latest',      # latest|2011.11|2011.10|2011.9|2011.8
+    $ensure          = 'present',
+    $user
 )
 {
+    # Work out where to get the version of eZ Publish from
     case $version {
         latest,2011.11: {
             $download_url = 'http://share.ez.no/content/download/122233/573797/version/1/file/'
@@ -36,16 +38,22 @@ define ezpublish::vhost(
         default: { fail("Unrecognized eZ Publish version") }
     }
 
-    # where downloaded copies of eZ publish are kept
+    # Where downloaded copies of eZ Publish are kept
     $dist_dir = '/var/ezpublish-dist'
 
     file{ $ezpublish::dist_dir:
         ensure => 'directory'
     }
 
-    host { $domain:
-        ensure => 'present',
-        ip     => '127.0.0.1',
+    # Setup a hosts entry on the VM so the AcceptPathInfo Test works.
+    # This isn't required when not running in a VM as the DNS should already be
+    # setup.
+
+    if $virtual == "virtualbox" {
+        host { $domain:
+            ensure => $ensure,
+            ip     => '127.0.0.1',
+        }
     }
 
     # Setup webserver
@@ -55,7 +63,7 @@ define ezpublish::vhost(
         enable_default => false,
         mode    => "02775",
         group   => "www-data",
-        user    => "vagrant",
+        user    => $user,
     }
 
     apache::directive { "${domain} php settings":
@@ -70,6 +78,7 @@ define ezpublish::vhost(
         vhost     => $domain,
     }
 
+    # Setup Database & DB user
     mysql::rights { $db_user:
         ensure   => $ensure,
         user     => $db_user,
@@ -83,6 +92,7 @@ define ezpublish::vhost(
         require => Mysql::Rights[$db_user],
     }
 
+    # Ensure we have a local copy of the eZ Publish version
     download_file { $download_file:
         site => $download_url,
         cwd  => $ezpublish::dist_dir,
@@ -90,30 +100,34 @@ define ezpublish::vhost(
         require => File[$ezpublish::dist_dir],
     }
 
+    # Extract the distribution into the DocRoot
     extract_file { "${ezpublish::dist_dir}/${download_file}":
         dest    => "/var/www/${domain}/htdocs",
         options => "--strip-components=1",
-        user    => 'vagrant',
+        user    => $user,
         onlyif  => "test \$(/usr/bin/find /var/www/${domain}/htdocs | wc -l) -eq 1",
         notify  => Enforce_perms["Enforce g+rw /var/www/${domain}/htdocs"],
         require => [Download_file[$download_file], Apache::Vhost[$domain]],
     }
 
+    # Ensure the group can read and write the files
     enforce_perms{ "Enforce g+rw /var/www/${domain}/htdocs":
         dir     => "/var/www/${domain}/htdocs",
         perms   => "g+rw",
         require => Extract_file[ "${ezpublish::dist_dir}/${download_file}" ],
     }
 
+    # Setup a kickstart.ini file the details
     file {"/var/www/${domain}/htdocs/kickstart.ini":
         content => template('ezpublish/ezpublish/kickstart.ini.erb'),
-        owner   => 'vagrant',
+        owner   => $user,
         group   => 'www-data',
         mode    => "0664",
         require => Extract_file[ "${ezpublish::dist_dir}/${download_file}" ],
     }
 }
 
+# Utility definations
 define extract_file(
         $dest    = '.',
         $options = '',
