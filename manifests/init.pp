@@ -23,14 +23,4 @@ class ezpublish {
         ensure  => present,
     }
 
-    # Install phpmysqladmin
-    package{ "phpmyadmin":
-        ensure => present,
-    }
-
-    file {"/etc/apache2/conf.d/phpmyadmin.conf":
-        ensure => "/etc/phpmyadmin/apache.conf",
-        require => Package["phpmyadmin"],
-        notify  => Exec["apache-graceful"]
-   }
 }
