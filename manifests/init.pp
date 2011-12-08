@@ -10,15 +10,17 @@ class ezpublish {
     $dist_dir = '/var/ezpublish-dist'
 
     # Install php modules
-    $php_package_list = ["php5-mysql", "php5-gd", "php5-mcrypt", "php5-imagick", "php-apc", "php-pear", "php-xml-parser", "php-mail", "php-log", "php-auth", "php5-curl"]
-    package{ $php_package_list:
-        ensure  => present,
-        notify  => Exec["apache-graceful"]
-    }
+    $php_module_list = ["mysql", "gd", "mcrypt", "imagick", "curl"]
+    php::module{ $php_module_list: }
+
+    # Install pear packages
+    $php_pear_package_list = [ "apc", "pear" ]
+    php::pear{ $php_pear_package_list: }
+
 
     # Install any required packages
-    $misc_package_list =["imagemagick"]
-    package{ $misc_package_list:
+    $package_list =["imagemagick"]
+    package{ $package_list:
         ensure  => present,
     }
 
