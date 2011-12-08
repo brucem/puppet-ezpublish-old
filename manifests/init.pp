@@ -11,12 +11,15 @@ class ezpublish {
 
     # Install php modules
     $php_module_list = ["mysql", "gd", "mcrypt", "imagick", "curl"]
-    php::module{ $php_module_list: }
+    php::module{ $php_module_list:
+        notify => Service["apache"],
+    }
 
     # Install pear packages
     $php_pear_package_list = [ "apc", "pear" ]
-    php::pear{ $php_pear_package_list: }
-
+    php::pear{ $php_pear_package_list:
+        notify => Service["apache"],
+    }
 
     # Install any required packages
     $package_list =["imagemagick"]
