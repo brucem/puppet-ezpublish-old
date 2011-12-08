@@ -1,13 +1,12 @@
-# Create an environment for an eZPublish instalation 
+# Create an environment for an eZPublish installation
 class ezpublish {
-
     require augeas
     require php
     require apache
     require php::apache
     require mysql::client
-    require mysql::server
 
+    # Central location of downloaded copies of eZ publish
     $dist_dir = '/var/ezpublish-dist'
 
     # Install php modules
