@@ -1,5 +1,5 @@
 define ezpublish::install:package(
-    $vhost
+    $vhost,
     $ez_primary_lang = 'eng-GB',
     $ez_site_title   = 'Demo Site',
     $ez_admin_fn     = 'Admin',
