@@ -1,4 +1,4 @@
-define ezpublish::install:package(
+define ezpublish::install::package(
     $vhost,
     $ez_primary_lang = 'eng-GB',
     $ez_site_title   = 'Demo Site',
@@ -7,13 +7,13 @@ define ezpublish::install:package(
     $ez_admin_pass   = 'publish',
     $ez_admin_email  = 'nospam@ez.no',
     $ez_package      = 'ezflow_site', # plain_site|ezwebin_site|ezwebin_site_clean|ezflow_site|ezflow_site_clean
-    $version         = 'latest',      # latest|2011.11|2011.10|2011.9|2011.8
+    $version         = 'latest'       # latest|2011.12|2011.11|2011.10|2011.9|2011.8
 )
 {
     # Work out where to get the version of eZ Publish from
     case $version {
         latest,2011.12: {
-            $download_url = 'http://share.ez.no/content/download/122944/664505/version/1/file/'
+            $download_url = 'http://share.ez.no/content/download/122947/664516/version/1/file/'
             $download_file = 'ezpublish_community_project-2011.12-with_ezc.tar.gz'
         }
         2011.11: {
@@ -47,7 +47,7 @@ define ezpublish::install:package(
     # setup.
 
     if $virtual == "virtualbox" {
-        host { $domain:
+        host { $vhost:
             ensure => $ensure,
             ip     => '127.0.0.1',
         }
@@ -63,23 +63,23 @@ define ezpublish::install:package(
 
     # Extract the distribution into the DocRoot
     extract_file { "${ezpublish::dist_dir}/${download_file}":
-        dest    => "/var/www/${domain}/htdocs",
+        dest    => "/var/www/${vhost}/htdocs",
         options => "--strip-components=1",
         user    => $user,
-        onlyif  => "test \$(/usr/bin/find /var/www/${domain}/htdocs | wc -l) -eq 1",
-        notify  => Enforce_perms["Enforce g+rw /var/www/${domain}/htdocs"],
-        require => [Download_file[$download_file], Apache::Vhost[$domain]],
+        onlyif  => "test \$(/usr/bin/find /var/www/${vhost}/htdocs | wc -l) -eq 1",
+        notify  => Enforce_perms["Enforce g+rw /var/www/${vhost}/htdocs"],
+        require => [Download_file[$download_file], Apache::Vhost[$vhost]],
     }
 
     # Ensure the group can read and write the files
-    enforce_perms{ "Enforce g+rw /var/www/${domain}/htdocs":
-        dir     => "/var/www/${domain}/htdocs",
+    enforce_perms{ "Enforce g+rw /var/www/${vhost}/htdocs":
+        dir     => "/var/www/${vhost}/htdocs",
         perms   => "g+rw",
         require => Extract_file[ "${ezpublish::dist_dir}/${download_file}" ],
     }
 
     # Setup a kickstart.ini file the details
-    file {"/var/www/${domain}/htdocs/kickstart.ini":
+    file {"/var/www/${vhost}/htdocs/kickstart.ini":
         content => template('ezpublish/ezpublish/kickstart.ini.erb'),
         owner   => $user,
         group   => 'www-data',
