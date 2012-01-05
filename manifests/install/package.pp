@@ -12,7 +12,11 @@ define ezpublish::install:package(
 {
     # Work out where to get the version of eZ Publish from
     case $version {
-        latest,2011.11: {
+        latest,2011.12: {
+            $download_url = 'http://share.ez.no/content/download/122944/664505/version/1/file/'
+            $download_file = 'ezpublish_community_project-2011.12-with_ezc.tar.gz'
+        }
+        2011.11: {
             $download_url = 'http://share.ez.no/content/download/122233/573797/version/1/file/'
             $download_file = 'ezpublish_community_project-2011.11-with_ezc.tar.gz'
         }
