@@ -10,7 +10,6 @@ define ezpublish::vhost(
     apache::vhost{ $name:
         ensure  => $ensure,
         notify  => Exec["apache-graceful"],
-        enable_default => false,
         mode    => "02775",
         group   => "www-data",
         user    => $user,
